@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sierpinski Carpet</title>
+
+    <script id="vertex_shader" type="x-shader/x-vertex">
+     attribute vec2 coordinate;
+     uniform float theta;
+
+     void main()
+     {
+         mat2 rotation_matrix = mat2(
+             cos(theta), -sin(theta),
+             sin(theta),  cos(theta)
+         );
+         vec2 result = rotation_matrix * coordinate;
+         gl_Position = vec4(result, 0.0, 1.0);
+     }
+    </script>
+
+    <script id="fragment_shader" type="x-shader/x-fragment">
+     void main()
+     {
+         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+     }
+    </script>
+
+    <script type="text/javascript" src="carpet.js"></script>
+  </head>
+
+  <body>
+    <canvas id="gl_canvas" width="600" height="600">
+      Your browser does not support HTML5 canvas element.
+    </canvas>
+    <br>
+    <button id="rotate_button" type="button">Spin!</button>
+    <input id="iter_slider" type="range" min="1" max="7" value="1" class="slider">
+    <label id="iter_label" for="iter_slider">1</label>
+  </body>
+</html>

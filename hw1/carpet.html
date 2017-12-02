@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sierpinski Carpet</title>
+
+    <script id="vertex_shader" type="x-shader/x-vertex">
+     attribute vec2 coordinate;
+
+     void main()
+     {
+         gl_Position  = vec4(coordinate, 0.0, 1.0);
+     }
+    </script>
+
+    <script id="fragment_shader" type="x-shader/x-fragment">
+     void main()
+     {
+         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+     }
+    </script>
+
+    <script type="text/javascript" src="carpet.js"></script>
+  </head>
+
+  <body>
+    <canvas id="gl_canvas" width="600" height="600">
+      Your browser does not support HTML5 canvas element.
+    </canvas>
+  </body>
+</html>
