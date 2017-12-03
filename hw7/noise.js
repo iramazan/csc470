@@ -1,6 +1,10 @@
 /*
- * Implementation of Improved Perlin Noise Algorithm from mrl.nyu.edu/~perlin/noise/
+ * Implementation of 2D Simplex Noise
+ * Based on staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
  */
+var grad = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
+             [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
+             [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
 var permutations = [151,160,137,91,90,15,
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
     190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
@@ -17,70 +21,98 @@ var permutations = [151,160,137,91,90,15,
 ];
 var p = [];
 
-/*
- * Linearly Interpolate between gradients a and b with weight t
- */
-function lerp(t, a, b)
-{
-    return a + t * (b - a);
+// assign values from permutations array to p array with double length
+for(var i = 0; i < 512; i++) {
+    p[i] = permutations[i & 255];
 }
 
 /*
- * Compute fade curve of a point
+ * Dot product 
+ * 2D vector array g and coordinate x, y
  */
-function fade(t)
+function dot(g, x, y)
 {
-    return t * t * t * (t * (t * 6 - 15) + 10);
+    return g[0]*x + g[1]*y;
 }
 
 /*
- * Compute a psuedo-random gradient
+ * Generate simplex noise at coordinate x, y
  */
-function grad(hash, x, y, z)
+function simplex_noise(x, y)
 {
-    // and low 4 bits of hash code with 1 to convert into 12 gradient directions
-    var h = hash & 15;
-    var u = h < 8 ? x : y;
-    var v = h < 4 ? y : h == 12 || h == 14 ? x : z;
-    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
-}
+    // noise from simplice corners
+    var n0, n1, n2;
 
-/*
- * Generate perlin noise at coordinate x, y, z
- */
-function perlin_noise(x, y, z)
-{
-    // Compute "unit cube" containing point
-    var X = Math.floor(x) & 255;
-    var Y = Math.floor(y) & 255;
-    var Z = Math.floor(z) & 255;
-    // Find relative coordinate of point within cube
-    x -= Math.floor(x);
-    y -= Math.floor(y);
-    z -= Math.floor(z);
-    // compute fade curves
-    var u = fade(x);
-    var v = fade(y);
-    var w = fade(z);
-    // find hash coordinates of unit cube corners
-    var A = p[X]+Y;
-    var AA = p[A] + Z;
-    var AB = p[A+1] + Z;
-    var B = p[X+1] + Y;
-    var BA = p[B]+Z;
-    var BB = p[B+1] + Z;
-    // blend gradients of 8 corners and linearly interpolate
-    return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z),
-                                   grad(p[BA], x-1, y, z)),
-                           lerp(u, grad(p[AB], x, y-1, z),
-                                   grad(p[BB], x-1, y-1, z))),
-                   lerp(v, lerp(u, grad(p[AA+1], x, y, z-1),
-                                   grad(p[BA+1], x-1, y, z-1)),
-                           lerp(u, grad(p[AB+1], x, y-1, z-1),
-                                   grad(p[BB+1], x-1, y-1, z-1))));
-}
+    // skew input space to determine cell
+    var F2 = 0.5*(Math.sqrt(3.0)-1.0);
+    var s = (x + y)*F2; // Hairy Factor
+    var i = Math.floor(x+s);
+    var j = Math.floor(y+s);
+    var G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
+    var t = (i + j) * G2;
+    // unskew back to x,y space
+    var X0 = i - t;
+    var Y0 = j - t;
+    // x,y distance from cell origin
+    var x0 = x - X0;
+    var y0 = y - Y0;
 
-// assign values from permutations array to p array
-for(var i = 0; i < 256; i++) {
-    p[256+1] = p[i] = permutations[i];
+    // determine which simplex we're in
+    var i1, j1; // Offset second/middle corner of simplex at i,j
+    // lower triangle 0,0 -> 1,0 -> 1,1
+    if (x0 > y0) {
+        i1 = 1;
+        j1 = 0;
+    }
+    // upper triangle 0,0 -> 0,1 -> 1,1
+    else {
+        i1 = 0;
+        j1 = 1;
+    }
+    // middle corner offset for x,y unskewed coords
+    var x1 = x0 - i1 + G2;
+    var y1 = y0 - j1 + G2;
+    // last corner offset for x,y unskewed coords
+    var x2 = x0 - 1.0 + 2.0 * G2;
+    var y2 = y0 - 1.0 + 2.0 * G2;
+
+    // calculate hashed gradient indices of simplex corners
+    var ii = i & 255;
+    var jj = j & 255;
+    var gi0 = p[ii+p[jj]] % 12;
+    var gi1 = p[ii+i1+p[jj+j1]] % 12;
+    var gi2 = p[ii+1+p[jj+1]] % 12;
+
+    // calculate contributions from each corner
+    // corner 0
+    var t0 = 0.5 - x0 * x0 - y0 * y0;
+    if (t0 < 0) {
+        n0 = 0.0;
+    }
+    else {
+        t0 *= t0;
+        n0 = t0 * t0 * dot(grad[gi0], x0, y0);
+    }
+    // corner 1
+    var t1 = 0.5 - x1 * x1 - y1 * y1;
+    if (t1 < 0) {
+        n1 = 0.0;
+    }
+    else {
+        t1 *= t1;
+        n1 = t1 * t1 * dot(grad[gi1], x1, y1);
+    }
+    // corner 2
+    var t2 = 0.5 - x2 * x2 - y2 * y2;
+    if (t2 < 0) {
+        n2 = 0.0;
+    }
+    else {
+        t2 *= t2;
+        n2 = t2 * t2 * dot(grad[gi2], x2, y2);
+    }
+
+    // Add contributions from every corner
+    // Scaled to be in interval [-1,1]
+    return 70.0 * (n0 + n1 + n2);
 }
