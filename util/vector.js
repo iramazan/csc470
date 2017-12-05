@@ -1,3 +1,99 @@
+/*
+ * Normalize a vector of length 3
+ */
+function norm3(v) {
+    var length = Math.sqrt(
+        v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+    );
+    return [
+        v[0] / length,
+        v[1] / length,
+        v[2] / length
+    ];
+}
+
+/*
+ * Calculate the cross product of 2 3d vectors
+ */
+function cross3(a,b)
+{
+    return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
+}
+
+/*
+ * Create a matrix to perform a shift by x, y, z
+ */
+function shift(x, y, z)
+{
+    return [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        x, y, z, 1
+    ];
+}
+
+/*
+ * Create a matrix to rotate around the z axis by theta t
+ */
+function rotate_Z(t)
+{
+    return [
+        Math.cos(t), -Math.sin(t), 0, 0,
+        Math.sin(t),  Math.cos(t), 0, 0,
+        0,            0,           1, 0,
+        0,            0,           0, 1
+    ];
+}
+
+/*
+ * Create a matrix to scale by a factor of f
+ */
+function scale(f)
+{
+    return [
+        f, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, f, 0,
+        0, 0, 0, 1
+    ];
+}
+
+/*
+ * Create a perspective projection matrix
+ */
+function persp(fov, apr, n, f)
+{
+    var fc = 1.0 / Math.tan(fov / 2);
+    var inv = 1 / (n - f);
+    return [
+        fc / apr, 0,  0,                0,
+        0,        fc, 0,                0,
+        0,        0,  (n + f) * inv,   -1,
+        0,        0,  n * f * inv * 2,  0
+    ];
+}
+
+/*
+ * Create an orthographic projection matrix
+ */
+function ortho(l, r, t, b, n, f)
+{
+    var lr = 1 / (l - r);
+    var bt = 1 / (b - t);
+    var nf = 1 / (n - f);
+    return [
+        -2 * lr,        0,            0,            0,
+         0,            -2 * bt,       0,            0,
+         0,             0,            2 * nf,       0,
+         (l + r) * lr,  (t + r) * bt, (f + n) * nf, 1
+    ];
+}
+
 // find cross product of two vectors in array vecs
 // starting at indices i1 and i2 respectively
 function surface_normal(vecs, i1, i2, i3, shift_x, shift_y)
@@ -9,12 +105,6 @@ function surface_normal(vecs, i1, i2, i3, shift_x, shift_y)
     // get two edge vectors
     var vec1 = [v2[0]-v1[0], v2[1]-v1[1], v2[2]-v1[2], 1];
     var vec2 = [v3[0]-v1[0], v3[1]-v1[1], v3[2]-v1[2], 1];
-    // create normal vector
-    var cross_vec = [
-        vec1[1]*vec2[2]-vec1[2]*vec2[1],
-        vec1[2]*vec2[0]-vec1[0]*vec2[2],
-        vec1[0]*vec2[1]-vec1[1]*vec2[0],
-        1
-    ];
-    return cross_vec;
+    // return normal vector
+    return cross3(vec1, vec2);
 };
