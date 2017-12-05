@@ -5,13 +5,19 @@
     <title>Procedurally Generated Terrain</title>
 
     <script id="vertex_shader" type="x-shader/x-vertex">
+     attribute vec4 coordinate;
+
      void main()
-     {}
+     {
+         gl_Position = coordinate;
+     }
     </script>
 
     <script id="fragment_shader" type="x-shader/x-fragment">
      void main()
-     {}
+     {
+         gl_FragColor = vec4(1, 0, 0, 0);
+     }
     </script>
 
     <script type="text/javascript" src="../util/webgl-utils.js"></script>
