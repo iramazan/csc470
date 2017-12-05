@@ -1,4 +1,16 @@
 /*
+ * Subtract 3d vector b from 3d vector a
+ */
+function sub(a, b)
+{
+    return [
+        a[0] - b[0],
+        a[1] - b[1],
+        a[2] - b[2],
+    ];
+}
+
+/*
  * Normalize a vector of length 3
  */
 function norm3(v) {
@@ -15,13 +27,21 @@ function norm3(v) {
 /*
  * Calculate the cross product of 2 3d vectors
  */
-function cross3(a,b)
+function cross3(a, b)
 {
     return [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
         a[0] * b[1] - a[1] * b[0]
     ];
+}
+
+/*
+ * Calculate the dot product of 2 3d vectors
+ */
+function dot(a, b)
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
 /*
@@ -92,6 +112,37 @@ function ortho(l, r, t, b, n, f)
          0,             0,            2 * nf,       0,
          (l + r) * lr,  (t + r) * bt, (f + n) * nf, 1
     ];
+}
+
+/*
+ * Create view matrix derived from eye viewing point
+ * Based on glm::lookAt function
+ */
+function look_at(eye, target, up)
+{
+    var f = norm3(sub(target, eye));
+    var u = norm3(up);
+    var s = norm3(cross3(f, u));
+    u = cross3(s, f);
+    var result = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 0
+    ];
+    result[0][0] = s.x;
+    result[1][0] = s.y;
+    result[2][0] = s.z;
+    result[0][1] = u.x;
+    result[1][1] = u.y;
+    result[2][1] = u.z;
+    result[0][2] = -f.x;
+    result[1][2] = -f.y;
+    result[2][2] = -f.z;
+    result[3][0] = -dot(s, eye);
+    result[3][1] = -dot(u, eye);
+    result[3][2] = dot(f, eye);
+    return result;
 }
 
 // find cross product of two vectors in array vecs
