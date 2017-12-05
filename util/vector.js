@@ -39,7 +39,7 @@ function cross3(a, b)
 /*
  * Calculate the dot product of 2 3d vectors
  */
-function dot(a, b)
+function dot3(a, b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
@@ -139,9 +139,9 @@ function look_at(eye, target, up)
     result[0][2] = -f.x;
     result[1][2] = -f.y;
     result[2][2] = -f.z;
-    result[3][0] = -dot(s, eye);
-    result[3][1] = -dot(u, eye);
-    result[3][2] = dot(f, eye);
+    result[3][0] = -dot3(s, eye);
+    result[3][1] = -dot3(u, eye);
+    result[3][2] = dot3(f, eye);
     return result;
 }
 

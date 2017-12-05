@@ -30,7 +30,7 @@ for(var i = 0; i < 512; i++) {
  * Dot product 
  * 2D vector array g and coordinate x, y
  */
-function dot(g, x, y)
+function gdot(g, x, y)
 {
     return g[0]*x + g[1]*y;
 }
@@ -91,7 +91,7 @@ function simplex_noise(x, y)
     }
     else {
         t0 *= t0;
-        n0 = t0 * t0 * dot(grad[gi0], x0, y0);
+        n0 = t0 * t0 * gdot(grad[gi0], x0, y0);
     }
     // corner 1
     var t1 = 0.5 - x1 * x1 - y1 * y1;
@@ -100,7 +100,7 @@ function simplex_noise(x, y)
     }
     else {
         t1 *= t1;
-        n1 = t1 * t1 * dot(grad[gi1], x1, y1);
+        n1 = t1 * t1 * gdot(grad[gi1], x1, y1);
     }
     // corner 2
     var t2 = 0.5 - x2 * x2 - y2 * y2;
@@ -109,7 +109,7 @@ function simplex_noise(x, y)
     }
     else {
         t2 *= t2;
-        n2 = t2 * t2 * dot(grad[gi2], x2, y2);
+        n2 = t2 * t2 * gdot(grad[gi2], x2, y2);
     }
 
     // Add contributions from every corner
