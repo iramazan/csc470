@@ -6,10 +6,15 @@
 
     <script id="vertex_shader" type="x-shader/x-vertex">
      attribute vec4 coordinate;
+     uniform mat4 projection;
+     uniform mat4 viewrx;
+     uniform mat4 viewry;
+     uniform mat4 viewt;
 
      void main()
      {
-         gl_Position = coordinate;
+         mat4 view = viewry * viewrx * viewt;
+         gl_Position = view * projection * coordinate;
      }
     </script>
 

@@ -1,13 +1,33 @@
 /*
+ * Add 3d vectors a and b
+ */
+function add3(a, b)
+{
+    return [
+        a[0] + b[0],
+        a[1] + b[1],
+        a[2] + b[2]
+    ];
+}
+
+/*
  * Subtract 3d vector b from 3d vector a
  */
-function sub(a, b)
+function sub3(a, b)
 {
     return [
         a[0] - b[0],
         a[1] - b[1],
         a[2] - b[2],
     ];
+}
+
+/*
+ * Multiple vec3 v by constant c
+ */
+function multcv3(c, v)
+{
+    return [c * v[0], c * v[1], c * v[2]];
 }
 
 /*
@@ -60,6 +80,32 @@ function shift(x, y, z)
 /*
  * Create a matrix to rotate around the z axis by theta t
  */
+function rotate_X(t)
+{
+    return [
+        1, 0,            0,           0,
+        0, Math.cos(t), -Math.sin(t), 0,
+        0, Math.sin(t),  Math.cos(t), 0,
+        0, 0,            0,           1
+    ];
+}
+
+/*
+ * Create a matrix to rotate around the y axis by theta t
+ */
+function rotate_Y(t)
+{
+    return [
+         Math.cos(t), 0, Math.sin(t), 0,
+         0,           1,           0, 0,
+        -Math.sin(t), 0, Math.cos(t), 0,
+        0,            0,           0, 1
+    ];
+}
+
+/*
+ * Create a matrix to rotate around the z axis by theta t
+ */
 function rotate_Z(t)
 {
     return [
@@ -86,15 +132,15 @@ function scale(f)
 /*
  * Create a perspective projection matrix
  */
-function persp(fov, apr, n, f)
+function persp(fov, asp, near, far)
 {
-    var fc = 1.0 / Math.tan(fov / 2);
-    var inv = 1 / (n - f);
+    var f = Math.tan(Math.PI * 0.5 - 0.5 * fov);
+    var inv = 1.0 / (near - far);
     return [
-        fc / apr, 0,  0,                0,
-        0,        fc, 0,                0,
-        0,        0,  (n + f) * inv,   -1,
-        0,        0,  n * f * inv * 2,  0
+        f / asp, 0, 0,                     0,
+        0,       f, 0,                     0,
+        0,       0, (near + far) * inv,   -1,
+        0,       0, near * far * inv * 2,  0
     ];
 }
 
@@ -120,29 +166,18 @@ function ortho(l, r, t, b, n, f)
  */
 function look_at(eye, target, up)
 {
-    var f = norm3(sub(target, eye));
-    var u = norm3(up);
-    var s = norm3(cross3(f, u));
-    u = cross3(s, f);
-    var result = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 0
+    var z = norm3(sub3(eye, target));
+    var x = norm3(cross3(up, z));
+    var y = cross3(z, x);
+    var b1 = -dot3(x, eye);
+    var b2 = -dot3(y, eye);
+    var b3 = -dot3(z, eye);
+    return [
+        x.x, y.x, z.x, 0,
+        x.y, y.y, z.y, 0,
+        x.z, y.z, z.z, 0,
+        b1,  b2,  b3,  1
     ];
-    result[0][0] = s.x;
-    result[1][0] = s.y;
-    result[2][0] = s.z;
-    result[0][1] = u.x;
-    result[1][1] = u.y;
-    result[2][1] = u.z;
-    result[0][2] = -f.x;
-    result[1][2] = -f.y;
-    result[2][2] = -f.z;
-    result[3][0] = -dot3(s, eye);
-    result[3][1] = -dot3(u, eye);
-    result[3][2] = dot3(f, eye);
-    return result;
 }
 
 // find cross product of two vectors in array vecs
