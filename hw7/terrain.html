@@ -10,11 +10,13 @@
      uniform mat4 viewrx;
      uniform mat4 viewry;
      uniform mat4 viewt;
+     uniform mat4 rot_model;
 
      void main()
      {
-         mat4 view = viewry * viewrx * viewt;
-         gl_Position = view * projection * coordinate;
+         mat4 view = viewt * viewry * viewrx;
+         mat4 model = rot_model;
+         gl_Position = projection * view * model * coordinate;
      }
     </script>
 
