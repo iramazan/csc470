@@ -4,9 +4,9 @@ var shader_program;
 var height_map = [];
 //var scene_width = 128;
 //var scene_height = 128;
-var scene_width = 4;
-var scene_height = 4;
-var vertices = new Float32Array(scene_width * scene_height * 4);
+var scene_width = 2;
+var scene_height = 2;
+var vertices = [];
 var x_shift = 0;
 var y_shift = -1;
 var z_shift = -6;
@@ -149,15 +149,22 @@ function vert_gen()
         height_map.push(column);
     }
     // Create vertices from height map
+    var sector = [
+        new vec4( 2, 0, -2, 1),
+        new vec4(-2, 0, -2, 1),
+        new vec4(-2, 0,  2, 1),
+        new vec4( 2, 0,  2, 1)
+    ];
     for (var i = 0; i < height_map.length; i++) {
         var dim = height_map[i];
         for (var j = 0; j < dim.length; j++) {
             //vertices.push([i-scene_width/2, dim[j], j-scene_height/2, 1]);
-            var index = i * scene_width + j;
-            vertices[index] = i-scene_width/2;
-            vertices[index+1] = dim[j];
-            vertices[index+2] = j-scene_width/2;
-            vertices[index+3] = 1;
+            sector.forEach(e => {
+                e.x += i-scene_width/4;
+                e.y = dim[j];
+                e.z += j-scene_height/4;
+                vertices.push(e);
+            });
         }
     }
 }
@@ -187,20 +194,16 @@ function prep_data()
  */
 function render()
 {
-    var vertices = [
-         3, 0, -3, 1,
-        -3, 0, -3, 1,
-        -3, 0,  3, 1,
-         3, 0,  3, 1,
-    ];
     var prev = 0;
     var rloop = function(current) {
         current *= 0.001;
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // buffer vertices
+        var verts = [];
+        vertices.forEach(e => verts = verts.concat(e.as_array()));
         var vert_buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vert_buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
         var vert_coord = gl.getAttribLocation(shader_program, "coordinate");
         gl.vertexAttribPointer(vert_coord, 4, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vert_coord);
@@ -210,7 +213,7 @@ function render()
         var rot_model_location = gl.getUniformLocation(shader_program, "rot_model");
         gl.uniformMatrix4fv(rot_model_location, false, new Float32Array(rot_anim));
         // draw
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, vertices.length/4);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, verts.length/4);
         prev = current;
         window.requestAnimFrame(render, canvas);
     };

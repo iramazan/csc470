@@ -1,4 +1,37 @@
 /*
+ * 4 dimensional vector class
+ */
+class vec4 {
+    constructor(x, y, z, w) {
+        this._x = x;
+        this._y = y;
+        this._z = z;
+        this._w = w;
+    }
+    get x() {
+        return this._x;
+    }
+    get y() {
+        return this._y;
+    }
+    get z() {
+        return this._z;
+    }
+    set x(x) {
+        this._x = x;
+    }
+    set y(y) {
+        this._y = y;
+    }
+    set z(z) {
+        this._z = z;
+    }
+    as_array() {
+        return [this._x, this._y, this._z, this._w];
+    }
+}
+
+/*
  * Add 3d vectors a and b
  */
 function add3(a, b)
