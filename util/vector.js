@@ -29,6 +29,38 @@ class vec4 {
     as_array() {
         return [this._x, this._y, this._z, this._w];
     }
+    addv(v) {
+        return new vec4(
+            this._x + v.x,
+            this._y + v.y,
+            this._z + v.z,
+            1
+        );
+    }
+    subv(v) {
+        return new vec4(
+            this._x - v.x,
+            this._y - v.y,
+            this._z - v.z,
+            1
+        );
+    }
+    multc(c) {
+        return new vec4(
+            this._x * c,
+            this._y * c,
+            this._z * c,
+            1
+        );
+    }
+    divc(c) {
+        return new vec4(
+            this._x / c,
+            this._y / c,
+            this._z / c,
+            1
+        );
+    }
 }
 
 /*

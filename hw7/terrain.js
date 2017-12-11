@@ -4,8 +4,7 @@ var shader_program;
 var height_map = [];
 //var scene_width = 128;
 //var scene_height = 128;
-var scene_width = 2;
-var scene_height = 2;
+var scene_dim = 2;
 var vertices = [];
 var x_shift = 0;
 var y_shift = -1;
@@ -130,16 +129,45 @@ function compile_shaders()
 }
 
 /*
+ * Subdivide plane into n*n subplanes
+ */
+function subdivide(n) {
+    var A = vertices[0];
+    var B = vertices[1];
+    var C = vertices[2];
+    var D = vertices[3];
+    for (var i = 0; i < n; i++) {
+        // left line segment
+        var P1 = D.subv(A).multc(i).divc(3).addv(A);
+        var P2 = C.subv(B).multc(i).divc(3).addv(B);
+        // right line segment
+        var Q1 = D.subv(A).multc(i+1).divc(3).addv(A);
+        var Q2 = C.subv(B).multc(i+1).divc(3).addv(B);
+        // create n subquads along line segments
+        for (var j = 0; j < n; j++) {
+            var An = P2.subv(P1).multc(j).divc(3).addv(P1);
+            var Bn = P2.subv(P1).multc(j+1).divc(3).addv(P1);
+            var Cn = Q2.subv(Q1).multc(j+1).divc(3).addv(Q1);
+            var Dn = Q2.subv(Q1).multc(j).divc(3).addv(Q1);
+            vertices.push(An);
+            vertices.push(Bn);
+            vertices.push(Cn);
+            vertices.push(Dn);
+        }
+    }
+}
+
+/*
  * Generate a height map
  */
 function vert_gen()
 {
     // generation loop
-    for (var x = 0; x < scene_width; x++) {
+    for (var x = 0; x < scene_dim; x++) {
         var column = [];
-        for (var y = 0; y < scene_height; y++) {
-            var nx = x / scene_width - 0.5;
-            var ny = y / scene_height - 0.5;
+        for (var y = 0; y < scene_dim; y++) {
+            var nx = x / scene_dim - 0.5;
+            var ny = y / scene_dim - 0.5;
             var e = 1 * intv(simplex_noise(1 * nx,  1 * ny), -1, 1, 0, 1) +
                 0.5 * intv(simplex_noise(2 * nx, 2 * ny), -1, 1, 0, 1) +
                 0.25 * intv(simplex_noise(4 * nx, 2 * ny), -1, 1, 0, 1) +
@@ -150,23 +178,13 @@ function vert_gen()
     }
     // Create vertices from height map
     var sector = [
-        new vec4( 2, 0, -2, 1),
-        new vec4(-2, 0, -2, 1),
-        new vec4(-2, 0,  2, 1),
-        new vec4( 2, 0,  2, 1)
+        new vec4(-3, 0,  3, 1),
+        new vec4(-3, 0, -3, 1),
+        new vec4( 3, 0, -3, 1),
+        new vec4( 3, 0,  3, 1)
     ];
-    for (var i = 0; i < height_map.length; i++) {
-        var dim = height_map[i];
-        for (var j = 0; j < dim.length; j++) {
-            //vertices.push([i-scene_width/2, dim[j], j-scene_height/2, 1]);
-            sector.forEach(e => {
-                e.x += i-scene_width/4;
-                e.y = dim[j];
-                e.z += j-scene_height/4;
-                vertices.push(e);
-            });
-        }
-    }
+    sector.forEach(e => vertices.push(e));
+    subdivide(scene_dim); // subdivide plane
 }
 
 /*
