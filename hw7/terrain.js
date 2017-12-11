@@ -4,7 +4,7 @@ var shader_program;
 var height_map = [];
 //var scene_width = 128;
 //var scene_height = 128;
-var scene_dim = 2;
+var scene_dim = 8;
 var vertices = [];
 var x_shift = 0;
 var y_shift = -1;
@@ -131,11 +131,12 @@ function compile_shaders()
 /*
  * Subdivide plane into n*n subplanes
  */
-function subdivide(n) {
-    var A = vertices[0];
-    var B = vertices[1];
-    var C = vertices[2];
-    var D = vertices[3];
+function subdivide(n)
+{
+    var D = vertices.pop();
+    var C = vertices.pop();
+    var B = vertices.pop();
+    var A = vertices.pop();
     for (var i = 0; i < n; i++) {
         // left line segment
         var P1 = D.subv(A).multc(i).divc(3).addv(A);
@@ -143,7 +144,7 @@ function subdivide(n) {
         // right line segment
         var Q1 = D.subv(A).multc(i+1).divc(3).addv(A);
         var Q2 = C.subv(B).multc(i+1).divc(3).addv(B);
-        // create n subquads along line segments
+        // create n subplanes along line segments
         for (var j = 0; j < n; j++) {
             var An = P2.subv(P1).multc(j).divc(3).addv(P1);
             var Bn = P2.subv(P1).multc(j+1).divc(3).addv(P1);
@@ -174,7 +175,7 @@ function vert_gen()
                 0.125 * intv(simplex_noise(4 * nx, 4 * ny), -1, 1, 0, 1);
             column.push(Math.pow(e, 1.51));
         }
-        height_map.push(column);
+        column.forEach(e => height_map.push(e));
     }
     // Create vertices from height map
     var sector = [
@@ -185,6 +186,9 @@ function vert_gen()
     ];
     sector.forEach(e => vertices.push(e));
     subdivide(scene_dim); // subdivide plane
+    for (var i = 0; i < vertices.length; i++) {
+        vertices[i].y = height_map[i];
+    }
 }
 
 /*

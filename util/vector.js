@@ -1,7 +1,8 @@
 /*
  * 4 dimensional vector class
  */
-class vec4 {
+class vec4
+{
     constructor(x, y, z, w) {
         this._x = x;
         this._y = y;
