@@ -6,6 +6,7 @@ var height_map = [];
 //var scene_height = 128;
 var scene_dim = 8;
 var vertices = [];
+var tex_coords = [];
 var x_shift = 0;
 var y_shift = -1;
 var z_shift = -6;
@@ -69,6 +70,7 @@ window.onload = function main()
     gl_init();
     compile_shaders();
     vert_gen();
+    texture_init();
     prep_data();
     render();
 };
@@ -151,9 +153,17 @@ function subdivide(n)
             var Cn = Q2.subv(Q1).multc(j+1).divc(3).addv(Q1);
             var Dn = Q2.subv(Q1).multc(j).divc(3).addv(Q1);
             vertices.push(An);
+            tex_coords.push(0.0);
+            tex_coords.push(1.0);
             vertices.push(Bn);
+            tex_coords.push(0.0);
+            tex_coords.push(0.0);
             vertices.push(Cn);
+            tex_coords.push(1.0);
+            tex_coords.push(0.0);
             vertices.push(Dn);
+            tex_coords.push(1.0);
+            tex_coords.push(1.0);
         }
     }
 }
@@ -190,6 +200,35 @@ function vert_gen()
         vertices[i].y = height_map[i];
     }
 }
+
+/*
+ * Initialize texture data and send to shaders
+ */
+function texture_init()
+{
+    var texture = gl.createTexture();
+    var image = new Image();
+    image.src = "rock_texture.jpg";
+    image.addEventListener('load', function() {
+        gl.bindTexture(gl.TEXTURE_2d, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        // different requirements if image is power of 2 or not
+        if (image.width & (image.width - 1) == 0 &&
+            image.height & (image.height - 1) == 0) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
+        else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+    });
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    var texture_location = gl.getUniformLocation(shader_program, "texture");
+    gl.uniform1i(texture_location, 0);
+}
+
 
 /*
  * Prepare data for sending to shaders
@@ -229,6 +268,13 @@ function render()
         var vert_coord = gl.getAttribLocation(shader_program, "coordinate");
         gl.vertexAttribPointer(vert_coord, 4, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vert_coord);
+        // buffer texture coordinates
+        var tex_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, tex_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(tex_coords), gl.STATIC_DRAW);
+        var tex_coord = gl.getAttribLocation(shader_program, "tex_coord");
+        gl.vertexAttribPointer(tex_coord, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(tex_coord);
         // rotate around plane
         var delta = current - prev;
         var rot_anim = rotate_Y(delta);

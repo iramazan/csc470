@@ -6,24 +6,35 @@
 
     <script id="vertex_shader" type="x-shader/x-vertex">
      attribute vec4 coordinate;
+     attribute vec2 tex_coord;
      uniform mat4 projection;
      uniform mat4 viewrx;
      uniform mat4 viewry;
      uniform mat4 viewt;
      uniform mat4 rot_model;
 
+     varying vec2 frag_tex;
+
      void main()
      {
          mat4 view = viewt * viewry * viewrx;
          mat4 model = rot_model;
          gl_Position = projection * view * model * coordinate;
+         frag_tex = tex_coord;
      }
     </script>
 
     <script id="fragment_shader" type="x-shader/x-fragment">
+     precision mediump float;
+
+     uniform sampler2D texture;
+
+     varying vec2 frag_tex;
+
      void main()
      {
-         gl_FragColor = vec4(1, 0, 0, 0);
+         vec4 txtr = texture2D(texture, frag_tex);
+         gl_FragColor = txtr;
      }
     </script>
 
