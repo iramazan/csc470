@@ -4,13 +4,13 @@ var shader_program;
 var height_map = [];
 //var scene_width = 128;
 //var scene_height = 128;
-var scene_dim = 8;
+var scene_dim = 16;
 var vertices = [];
 var tex_coords = [];
 var x_shift = 0;
-var y_shift = -1;
-var z_shift = -6;
-var pitch = -0.3;
+var y_shift = -2;
+var z_shift = -8;
+var pitch = -0.8;
 var yaw = 0;
 
 // process input keys
@@ -135,6 +135,7 @@ function compile_shaders()
  */
 function subdivide(n)
 {
+    var hm_index = 0;
     var D = vertices.pop();
     var C = vertices.pop();
     var B = vertices.pop();
@@ -152,15 +153,15 @@ function subdivide(n)
             var Bn = P2.subv(P1).multc(j+1).divc(3).addv(P1);
             var Cn = Q2.subv(Q1).multc(j+1).divc(3).addv(Q1);
             var Dn = Q2.subv(Q1).multc(j).divc(3).addv(Q1);
-            vertices.push(An);
-            tex_coords.push(0.0);
-            tex_coords.push(1.0);
             vertices.push(Bn);
             tex_coords.push(0.0);
             tex_coords.push(0.0);
             vertices.push(Cn);
             tex_coords.push(1.0);
             tex_coords.push(0.0);
+            vertices.push(An);
+            tex_coords.push(0.0);
+            tex_coords.push(1.0);
             vertices.push(Dn);
             tex_coords.push(1.0);
             tex_coords.push(1.0);
@@ -179,11 +180,11 @@ function vert_gen()
         for (var y = 0; y < scene_dim; y++) {
             var nx = x / scene_dim - 0.5;
             var ny = y / scene_dim - 0.5;
-            var e = 1 * intv(simplex_noise(1 * nx,  1 * ny), -1, 1, 0, 1) +
-                0.5 * intv(simplex_noise(2 * nx, 2 * ny), -1, 1, 0, 1) +
-                0.25 * intv(simplex_noise(4 * nx, 2 * ny), -1, 1, 0, 1) +
-                0.125 * intv(simplex_noise(4 * nx, 4 * ny), -1, 1, 0, 1);
-            column.push(Math.pow(e, 1.51));
+            var e = 2 * intv(simplex_noise(1 * nx,  1 * ny), -1, 1, 0, 1) +
+                1 * intv(simplex_noise(2 * nx, 2 * ny), -1, 1, 0, 1) +
+                0.5 * intv(simplex_noise(4 * nx, 2 * ny), -1, 1, 0, 1) +
+                0.25 * intv(simplex_noise(4 * nx, 4 * ny), -1, 1, 0, 1);
+            column.push(Math.pow(e, 1.61));
         }
         column.forEach(e => height_map.push(e));
     }
@@ -281,7 +282,7 @@ function render()
         var rot_model_location = gl.getUniformLocation(shader_program, "rot_model");
         gl.uniformMatrix4fv(rot_model_location, false, new Float32Array(rot_anim));
         // draw
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, verts.length/4);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, verts.length/4);
         prev = current;
         window.requestAnimFrame(render, canvas);
     };
