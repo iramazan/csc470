@@ -2,9 +2,7 @@ var canvas;
 var gl;
 var shader_program;
 var height_map = [];
-//var scene_width = 128;
-//var scene_height = 128;
-var scene_dim = 16;
+var scene_dim = 4;
 var vertices = [];
 var tex_coords = [];
 var x_shift = 0;
@@ -68,6 +66,7 @@ document.addEventListener('keydown', function(event) {
 window.onload = function main()
 {
     gl_init();
+    doc_init();
     compile_shaders();
     vert_gen();
     texture_init();
@@ -94,6 +93,23 @@ function gl_init()
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
+}
+
+/*
+ * Initialize document functionality
+ */
+function doc_init()
+{
+    // vertex slider
+    var vert_slider = document.getElementById("vert_slider");
+    var vert_label = document.getElementById("vert_label");
+    var vert_func = function() {
+        vertices = [];
+        vert_label.textContent = vert_slider.value;
+        scene_dim = vert_slider.value;
+        vert_gen();
+    };
+    vert_slider.addEventListener("input", vert_func, false);
 }
 
 /*
@@ -175,9 +191,9 @@ function subdivide(n)
 function vert_gen()
 {
     // generation loop
-    for (var x = 0; x < scene_dim; x++) {
+    for (var x = 0; x < scene_dim*2; x++) {
         var column = [];
-        for (var y = 0; y < scene_dim; y++) {
+        for (var y = 0; y < scene_dim*2; y++) {
             var nx = x / scene_dim - 0.5;
             var ny = y / scene_dim - 0.5;
             var e = 2 * intv(simplex_noise(1 * nx,  1 * ny), -1, 1, 0, 1) +
